@@ -22,7 +22,9 @@ TwitchTurtle
 To inform your viewers about TurtleCoin and your new way of donating, you can copy and paste this Text into a nightbot repeating command, or into your description.
 
 
-TODO: Copy/paste
+TurtleCoin is a cryptocurrency that is fast, private, and easy to use!
+If you would like to Donate using TurtleCoin, go to github.com/turtlecoin/box-turtle
+Alternatively, if you already use TurtleCoin, you can donate to my address here: <YOUR TRTL ADDRESS>
 
 #### How to get TRTL into USD
 
