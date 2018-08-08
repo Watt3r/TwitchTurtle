@@ -86,7 +86,7 @@ def createAddresses():
 	# Generate a new wallet file
 	print("Could not find any wallet file! Making a new one.")
 	
-	walletdArgs = cwd+"\\scripts\\walletd.exe -g -w scripts\\"+walletname+" -p "+walletpassword+" --rpc-password "+rpcpassword 
+	walletdArgs = cwd+"\\scripts\\walletd.exe -g -w scripts\\"+walletname+" -p "+walletpassword+" --rpc-password "+rpc_password 
 	process = subprocess.Popen(walletdArgs, stdout=subprocess.PIPE)
 	process.wait()
 
