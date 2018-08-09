@@ -2,8 +2,12 @@ TwitchTurtle
 ======
 ## Integrate TurtleCoin with StreamLabs
 
+### Basic installation
 
-#### Installation Process
+* Download the new release from https://github.com/Watt3r/TwitchTurtle/releases/ and run it
+
+
+#### Building from Source
 
 * Clone or Download this Git repository onto your local machine
 * Check to see if you have python already installed, you can check with `python --version` or `python3 --version` You must have python 3.6.5 or higher to work.
@@ -37,4 +41,4 @@ If you need help, with any aspect of this project, make sure to [Join the Offici
 
 ### TL;DR
 
-Cmon, it's a short read, and goes in depth about how to set it up
+https://github.com/Watt3r/TwitchTurtle/releases/
