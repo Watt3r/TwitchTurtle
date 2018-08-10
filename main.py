@@ -21,7 +21,8 @@ This file is part of TwitchTurtle.
 
 '''
 from scripts.walletd import Walletd
-from scripts.settings import Settings
+from scripts.turtlecoind import TurtleCoind
+from settings.settings import Settings
 from scripts.streamlabs import Stream
 from time import sleep
 from scripts.webserver import *
@@ -48,8 +49,6 @@ START STREAMLABS CODE
 '''
 Stream.checkLocalTokenAndCreate()
 keys = Stream.checkToken()
-#print("Printing keys {}".format(keys))
-#print(keys[0])
 
 '''
 START WALLETD
@@ -58,6 +57,7 @@ walletname = Settings.Settings['walletname']
 walletpassword = Settings.Settings['walletpassword']
 
 rpc_password = Settings.Settings['rpcpassword']
+feeAmount = '100'
 
 
 
@@ -65,33 +65,55 @@ rpc_password = Settings.Settings['rpcpassword']
 rpc_host = 'localhost'
 rpc_port = 8070
 walletd = Walletd(rpc_password, rpc_host, rpc_port)
+turtlecoind = TurtleCoind()
 
 def startWalletd():
+	global proc1
 	# Open walletd
 	print("Starting Walletd")
 	
 	try:
-		walletdArgs = cwd+"\\scripts\\walletd.exe -w scripts\\"+walletname+" -p "+walletpassword+" --rpc-password "+rpc_password+" --daemon-address public.turtlenode.io" 
+		walletdArgs = cwd+"\\scripts\\turtle-service.exe -w scripts\\"+walletname+" -p "+walletpassword+" --rpc-password "+rpc_password+" --enable-cors  '*'"
 
-		global proc1
 		proc1 = subprocess.Popen(walletdArgs, stderr=subprocess.STDOUT)
 		sleep(5)
 	except Exception as err:
 		print('An error occured, check your task manager to make sure walletd is not running. Error: {}'.format(err))
+		exit()
 
+def startdaemon():
+	global proc2
+	# Get the most recent Checkpoints file and save it
+	url = 'https://github.com/turtlecoin/checkpoints/raw/master/checkpoints.csv'
+	r = requests.get(url, allow_redirects=True)
+	open('checkpoints.csv', 'wb').write(r.content)
 
+	# Open Daemons
+	print("Starting TurtleCoind")
 	
+	try:
+		turtlecoindArgs = cwd+"\\scripts\\turtlecoind.exe --load-checkpoints checkpoints.csv --fee-address TRTLuxXuMJYPAWwbqUpBPkjWA79hLdb6G5CF4fjqhdgP8ufhbLcFWNRPJiwtdZ5QcDgukvXT8yVxXSoXrehdwnRTZwDLQCMVoNf --fee-amount "+feeAmount 
+		
+		proc2 = subprocess.Popen(turtlecoindArgs, stderr=subprocess.STDOUT)
+		sleep(20)
+		startWalletd()
+		#checksync()
 
+	except Exception as err:
+		print('An error occured, check your task manager to make sure turtlecoind is not running. Error: {}'.format(err))
+		exit()
+		
 def createAddresses():
 	# Generate a new wallet file
 	print("Could not find any wallet file! Making a new one.")
 	
-	walletdArgs = cwd+"\\scripts\\walletd.exe -g -w scripts\\"+walletname+" -p "+walletpassword+" --rpc-password "+rpc_password 
+	walletdArgs = cwd+"\\scripts\\turtle-service.exe -g -w scripts\\"+walletname+" -p "+walletpassword+" --rpc-password "+rpc_password 
 	process = subprocess.Popen(walletdArgs, stdout=subprocess.PIPE)
 	process.wait()
 
 
 def savewallet():
+	# Save the wallet periodically in case the User closes without warning.
 	try:
 		response = walletd.save()
 	except Exception as err:
@@ -100,18 +122,26 @@ def savewallet():
 		print('Error in saving wallet : {}'.format(response))
 
 def endwallet():
+	# Stop the wallet
 	proc1.terminate()
+	proc2.terminate()
 	sleep(5)
 	proc1.kill()
-	print("Safe to close wallet now.")
+	proc2.kill()
+	print("Safe to close Script now.")
 	exit()
 
 def postTransaction(amount, extra):
+	# Convert The extra data and send it to streamlabs.py
+	amount = amount / 100
+	coinmarketcap = "https://api.coinmarketcap.com/v2/ticker/2958/?convert={}".format(Settings.Settings['currencyPref']) 
+	r = requests.request("GET", coinmarketcap)
+	convertTRTL = r.json().get('data').get('quotes').get(Settings.Settings['currencyPref']).get('price')
+	amount = amount * convertTRTL
 	try:
 		extraASCII = binascii.unhexlify(extra.encode()).decode()
 		print(extraASCII)
 		extraDict = ast.literal_eval(extraASCII)
-		#print(extraDict)
 		name = extraDict['name']
 		message = extraDict['message'][:255]
 
@@ -120,32 +150,12 @@ def postTransaction(amount, extra):
 			print('Invalid Name')
 
 		print("{} has sent the message {}.".format(name, message))
-
-		# Convert TRTL atomic units in actual TRTL
-		amount = amount / 100
-
-		# Convert TRTL to currencypref
-		coinmarketcap = "https://api.coinmarketcap.com/v2/ticker/2958/?convert={}".format(Settings.Settings['currencyPref']) 
-		r = requests.request("GET", coinmarketcap)
-		convertTRTL = r.json().get('data').get('quotes').get(Settings.Settings['currencyPref']).get('price')
-		amount = amount * convertTRTL
 			
-		Stream.postDonation(name, message, amount, 'USD', keys[1])
+		Stream.postDonation(name, message, amount, Settings.Settings['currencyPref'], keys[1])
 	except Exception as err: 
 		print(err)
-
-		# Convert TRTL to currencypref
-		coinmarketcap = "https://api.coinmarketcap.com/v2/ticker/2958/?convert={}".format(Settings.Settings['currencyPref']) 
-		r = requests.request("GET", coinmarketcap)
-		convertTRTL = r.json().get('data').get('quotes').get(Settings.Settings['currencyPref']).get('price')
-		amount = amount * convertTRTL
-			
-		Stream.postDonation('Anonymous', 'Some TRTL\'er forgot to put a name and message! Oh no! If this was you, make sure to add the extra data field from the converter.', amount, 'USD', keys[1])
-	
-
+		Stream.postDonation('Anonymous', 'Some TRTL\'er forgot to put a name and message! Oh no! If this was you, make sure to add the extra data field from the converter.', amount, Settings.Settings['currencyPref'], keys[1])
 def searchForTransaction(addresses, lastBlockCount=None):
-
-
 	# Get new block height
 	responseStatus = walletd.get_status()
 	blockCount = responseStatus['result']['blockCount']
@@ -153,41 +163,21 @@ def searchForTransaction(addresses, lastBlockCount=None):
 	if not lastBlockCount:
 		lastBlockCount = knownBlockCount  - 2
 	threading.Timer(0.5, searchForTransaction, args=[addresses, knownBlockCount],).start() # START ASYNC PROCESS
-	#print("knownBlockCount {}  \n lastBlockCount {}".format(knownBlockCount, lastBlockCount))
 	if ((knownBlockCount - lastBlockCount) > 1):
 		skippedBlockDetector = (knownBlockCount - (knownBlockCount - lastBlockCount) - 2)
-		#print("Skipped {} blocks".format(knownBlockCount - lastBlockCount))
-		
 	else:
 		skippedBlockDetector = knownBlockCount - 2
-		#print("Skipped {} blocks".format(blockCount - skippedBlockDetector))
-		#print('{} {} {}'.format(lastBlockCount, knownBlockCount, skippedBlockDetector))
 	if (knownBlockCount > lastBlockCount): # If the network found a new block, check the transactions in that block
-		print('New block. Block {}'.format(knownBlockCount))
-		#print('Skipped block detector says {}'.format(skippedBlockDetector))
 		response = walletd.get_transactions(addresses, skippedBlockDetector, 10)
 		responseItems = response['result']['items']
 		for x in responseItems:
 			for y in x['transactions']:
 				postTransaction(y['amount'], y['extra'])
 
-	
-
-
-
-
-
-if os.path.isfile(cwd+"\\scripts\\"+walletname):
-	# Start walletd
-	#print('wallet found!')
-	startWalletd()
-else:
-	# Create wallet
-	#print('no wallet found')
-	createAddresses()
+# Start TurtleCoind and wait for it to sync
+startdaemon()
 
 # Check if wallet is synced with the network
-
 response = walletd.get_status()
 nodeHeight = response['result']['knownBlockCount']
 walletHeight = response['result']['blockCount']
@@ -212,6 +202,6 @@ if (nodeHeight - walletHeight) < 10:
 
 response = walletd.get_addresses()
 addresses = response['result']['addresses']
-print('In order to recieve tips, users must send TRTL to this address: {}'.format(addresses[0]))
+print('In order to recieve tips, users must send TRTL to this address: {} \n It is highly recommended to transfer all the funds out of this wallet into a more secure one. You can transact the TRTL out from the box-turtle folder.'.format(addresses[0]))
 
 searchForTransaction(addresses)
