@@ -4,7 +4,9 @@ TwitchTurtle
 
 ### Basic installation
 
-* Download the new release from https://github.com/Watt3r/TwitchTurtle/releases/ and run it
+* Download the new release from https://github.com/Watt3r/TwitchTurtle/releases/ 
+* Change the settings in settings/setttings.py with any text editor
+* Run main.exe
 
 
 #### Building from Source
