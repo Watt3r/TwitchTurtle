@@ -73,7 +73,7 @@ def startWalletd():
 	print("Starting Walletd")
 	
 	try:
-		walletdArgs = cwd+"\\scripts\\turtle-service.exe -w scripts\\"+walletname+" -p "+walletpassword+" --rpc-password "+rpc_password+" --enable-cors  '*'"
+		walletdArgs = cwd+"\\scripts\\turtle-service.exe -w scripts\\"+walletname+" -p "+walletpassword+" --rpc-password "+rpc_password+" --enable-cors  '*' --daemon-address 127.0.0.1"
 
 		proc1 = subprocess.Popen(walletdArgs, stderr=subprocess.STDOUT)
 		sleep(5)
@@ -92,11 +92,16 @@ def startdaemon():
 	print("Starting TurtleCoind")
 	
 	try:
-		turtlecoindArgs = cwd+"\\scripts\\turtlecoind.exe --load-checkpoints checkpoints.csv --fee-address TRTLuxXuMJYPAWwbqUpBPkjWA79hLdb6G5CF4fjqhdgP8ufhbLcFWNRPJiwtdZ5QcDgukvXT8yVxXSoXrehdwnRTZwDLQCMVoNf --fee-amount "+feeAmount 
+		turtlecoindArgs = cwd+"\\scripts\\turtlecoind.exe --load-checkpoints checkpoints.csv --log-level 1 --fee-address TRTLuxXuMJYPAWwbqUpBPkjWA79hLdb6G5CF4fjqhdgP8ufhbLcFWNRPJiwtdZ5QcDgukvXT8yVxXSoXrehdwnRTZwDLQCMVoNf --fee-amount "+feeAmount 
 		
 		proc2 = subprocess.Popen(turtlecoindArgs, stderr=subprocess.STDOUT)
-		sleep(20)
-		startWalletd()
+		
+		if os.path.isfile(cwd+"\\scripts\\"+walletname):
+			# Start walletd
+			startWalletd()
+		else:
+			# Create wallet
+			createAddresses()
 		#checksync()
 
 	except Exception as err:
@@ -110,6 +115,7 @@ def createAddresses():
 	walletdArgs = cwd+"\\scripts\\turtle-service.exe -g -w scripts\\"+walletname+" -p "+walletpassword+" --rpc-password "+rpc_password 
 	process = subprocess.Popen(walletdArgs, stdout=subprocess.PIPE)
 	process.wait()
+	startWalletd()
 
 
 def savewallet():
@@ -176,32 +182,37 @@ def searchForTransaction(addresses, lastBlockCount=None):
 
 # Start TurtleCoind and wait for it to sync
 startdaemon()
+sleep(1)
+
+# Set Address
+
+response = walletd.get_addresses()
+addresses = response['result']['addresses']
+print('\n\n\nIn order to recieve tips, users must send TRTL to this address: {} \n It is highly recommended to transfer all the funds out of this wallet into a more secure one. You can transact the TRTL out from the box-turtle folder.\n\n\n'.format(addresses[0]))
+
 
 # Check if wallet is synced with the network
 response = walletd.get_status()
 nodeHeight = response['result']['knownBlockCount']
 walletHeight = response['result']['blockCount']
 
-print('TRTL network is on block {}'.format(nodeHeight))
+while response['result']['knownBlockCount'] is 1:
+	print('Please wait, TurtleCoin is launching')
+	response = walletd.get_status()
+	sleep(5)
+
 i = 0
-while (abs(nodeHeight - walletHeight) > 10):
+while ((abs(nodeHeight - walletHeight) > 10) or nodeHeight < 10 or walletHeight < 10):
 	response = walletd.get_status()
 	nodeHeight = response['result']['knownBlockCount']
 	walletHeight = response['result']['blockCount']
-	print('Please wait while the wallet is syncing, you are {} block(s) behind. Slow and Steady wins the race!'.format(nodeHeight - walletHeight))
+	print('\nStill syncing, you are {} block(s) behind.'.format(nodeHeight - walletHeight))
 	i += 1
 	if i==10:
 		savewallet()
 		i = 0
 	sleep(10)
-if (nodeHeight - walletHeight) < 10: 
-	print("You are now syncronised with the TRTL network. Enjoy!")
-	savewallet() 
 
-# Set Address
-
-response = walletd.get_addresses()
-addresses = response['result']['addresses']
-print('In order to recieve tips, users must send TRTL to this address: {} \n It is highly recommended to transfer all the funds out of this wallet into a more secure one. You can transact the TRTL out from the box-turtle folder.'.format(addresses[0]))
-
+savewallet()	
+print('\n\n\nIn order to recieve tips, users must send TRTL to this address: {} \n It is highly recommended to transfer all the funds out of this wallet into a more secure one. You can transact the TRTL out from the box-turtle folder.\n\n\n'.format(addresses[0]))
 searchForTransaction(addresses)
