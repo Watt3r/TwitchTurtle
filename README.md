@@ -5,7 +5,7 @@ Note: This is works with Twitch and Youtube Live
 ### Basic installation
 
 * Download the new release from https://github.com/Watt3r/TwitchTurtle/releases/ 
-* Change the settings in settings/setttings.py with any text editor
+* Change the settings in settings.ini with any text editor
 * Run main.exe
 * While you are streaming, you need to keep main.exe open
 
@@ -38,7 +38,7 @@ If you need help, with any aspect of this project, make sure to [Join the Offici
 * Check to see if you have python already installed, you can check with `python --version` or `python3 --version` You must have python 3.6.5 or higher to work.
 * If the command above worked when you had a 3 added to the end of python, you must add that for all steps, with `python` and `pip` so they look like `python3` and `pip3`
 * Open terminal or cmd and go to the TwitchTurtle folder and enter `pip install -r requirements.txt`
-* Open the `settings.py` from the script subfolder with your favorite editor, and change the values to what you feel is best.
+* Open the `settings.ini` with your favorite editor, and change the password and username.
 * Then, run `python main.py` while in the TwitchTurtle folder.
 
 

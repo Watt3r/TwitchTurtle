@@ -21,7 +21,6 @@ This file is part of TwitchTurtle.
 
 '''
 from scripts.walletd import Walletd
-from scripts.settings import Settings
 from time import sleep
 from scripts.webserver import *
 import subprocess

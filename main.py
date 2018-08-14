@@ -22,7 +22,6 @@ This file is part of TwitchTurtle.
 '''
 from scripts.walletd import Walletd
 from scripts.turtlecoind import TurtleCoind
-from settings.settings import Settings
 from scripts.streamlabs import Stream
 from time import sleep
 from scripts.webserver import *
@@ -38,11 +37,22 @@ import ast
 import binascii
 import string
 import random
-print("TwitchTurtle  Copyright (C) 2018  Watt Erikson and TurtleCoin Devs \n This program comes with ABSOLUTELY NO WARRANTY. \n This is free software, and you are welcome to redistribute it \n under certain conditions.")
+import configparser
+print("TwitchTurtle  Copyright (C) 2018  Watt Erikson and TurtleCoin Devs \n This program comes with ABSOLUTELY NO WARRANTY. \n This is free software, and you are welcome to redistribute it \n under certain conditions.\n\n")
 
 cwd = os.getcwd()
+
+
+config = configparser.ConfigParser()
+config.sections()
+config.read('settings.ini')
+config.sections()
+
+with open('settings.ini', 'w') as configfile:
+  config.write(configfile)
+
 # Set what type of currency you want (TRTL or USD)
-currencyPref = Settings.Settings['currencyPref']
+currencyPref = config['SETTINGS']['currencyPref']
 print('Currency is set to {}'.format(currencyPref))
 
 
@@ -55,8 +65,11 @@ keys = Stream.checkToken()
 '''
 START WALLETD
 '''
-walletname = Settings.Settings['walletname']
-walletpassword = Settings.Settings['walletpassword']
+walletname = config['SETTINGS']['walletname']
+walletpassword = config['SETTINGS']['walletpassword']
+
+if walletpassword == 'defaultpass':
+	input('Change your wallet passsword in settings.ini, or you can choose to ignore this security risk and press [ENTER] to continue')
 
 def passGen(size=10, chars=string.ascii_uppercase + string.digits):
 	return ''.join(random.choice(chars) for _ in range(size))
@@ -98,10 +111,10 @@ def startdaemon():
 	print("Starting TurtleCoind")
 	
 	try:
-		turtlecoindArgs = cwd+"\\scripts\\turtlecoind.exe --load-checkpoints checkpoints.csv --log-level 1 --fee-address TRTLuxXuMJYPAWwbqUpBPkjWA79hLdb6G5CF4fjqhdgP8ufhbLcFWNRPJiwtdZ5QcDgukvXT8yVxXSoXrehdwnRTZwDLQCMVoNf --fee-amount "+feeAmount 
+		turtlecoindArgs = cwd+"\\scripts\\turtlecoind.exe --load-checkpoints checkpoints.csv --log-level 2 --fee-address TRTLuxXuMJYPAWwbqUpBPkjWA79hLdb6G5CF4fjqhdgP8ufhbLcFWNRPJiwtdZ5QcDgukvXT8yVxXSoXrehdwnRTZwDLQCMVoNf --fee-amount "+feeAmount 
 		
 		proc2 = subprocess.Popen(turtlecoindArgs, stderr=subprocess.STDOUT)
-		
+		sleep(10)
 		if os.path.isfile(cwd+"\\scripts\\"+walletname):
 			# Start walletd
 			startWalletd()
@@ -146,9 +159,9 @@ def endwallet():
 def postTransaction(amount, extra):
 	# Convert The extra data and send it to streamlabs.py
 	amount = amount / 100
-	coinmarketcap = "https://api.coinmarketcap.com/v2/ticker/2958/?convert={}".format(Settings.Settings['currencyPref']) 
+	coinmarketcap = "https://api.coinmarketcap.com/v2/ticker/2958/?convert={}".format(currencyPref) 
 	r = requests.request("GET", coinmarketcap)
-	convertTRTL = r.json().get('data').get('quotes').get(Settings.Settings['currencyPref']).get('price')
+	convertTRTL = r.json().get('data').get('quotes').get(currencyPref).get('price')
 	amount = amount * convertTRTL
 	try:
 		extraASCII = binascii.unhexlify(extra.encode()).decode()
@@ -163,10 +176,10 @@ def postTransaction(amount, extra):
 
 		print("{} has sent the message {}.".format(name, message))
 			
-		Stream.postDonation(name, message, amount, Settings.Settings['currencyPref'], keys[1])
+		Stream.postDonation(name, message, amount, currencyPref, keys[1])
 	except Exception as err: 
 		print(err)
-		Stream.postDonation('Anonymous', 'Some TRTL\'er forgot to put a name and message! Oh no! If this was you, make sure to add the extra data field from the converter.', amount, Settings.Settings['currencyPref'], keys[1])
+		Stream.postDonation('Anonymous', 'Some TRTL\'er forgot to put a name and message! Oh no! If this was you, make sure to add the extra data field from the converter.', amount, currencyPref, keys[1])
 def searchForTransaction(addresses, lastBlockCount=None):
 	# Get new block height
 	responseStatus = walletd.get_status()
@@ -189,13 +202,7 @@ def searchForTransaction(addresses, lastBlockCount=None):
 
 # Start TurtleCoind and wait for it to sync
 startdaemon()
-sleep(1)
-
-# Set Address
-
-response = walletd.get_addresses()
-addresses = response['result']['addresses']
-print('\n\n\nIn order to recieve tips, users must send TRTL to this address: {} \n It is highly recommended to transfer all the funds out of this wallet into a more secure one. You can transact the TRTL out from the box-turtle folder.\n\n\n'.format(addresses[0]))
+sleep(20)
 
 
 # Check if wallet is synced with the network
@@ -207,6 +214,12 @@ while response['result']['knownBlockCount'] is 1:
 	print('Turtlecoin is starting, please wait')
 	response = walletd.get_status()
 	sleep(5)
+# Set Address
+
+response = walletd.get_addresses()
+addresses = response['result']['addresses']
+print('\n\n\nIn order to recieve tips, users must send TRTL to this address: {} \n It is highly recommended to transfer all the funds out of this wallet into a more secure one. You can transact the TRTL out from the box-turtle folder.\n\n\n'.format(addresses[0]))
+
 
 i = 0
 while ((abs(nodeHeight - walletHeight) > 10) or nodeHeight < 10 or walletHeight < 10):
