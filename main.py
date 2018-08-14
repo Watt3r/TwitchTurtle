@@ -36,6 +36,8 @@ import webbrowser
 import json
 import ast
 import binascii
+import string
+import random
 print("TwitchTurtle  Copyright (C) 2018  Watt Erikson and TurtleCoin Devs \n This program comes with ABSOLUTELY NO WARRANTY. \n This is free software, and you are welcome to redistribute it \n under certain conditions.")
 
 cwd = os.getcwd()
@@ -56,7 +58,11 @@ START WALLETD
 walletname = Settings.Settings['walletname']
 walletpassword = Settings.Settings['walletpassword']
 
-rpc_password = Settings.Settings['rpcpassword']
+def passGen(size=10, chars=string.ascii_uppercase + string.digits):
+	return ''.join(random.choice(chars) for _ in range(size))
+
+
+rpc_password = passGen()
 feeAmount = '100'
 
 
@@ -180,6 +186,7 @@ def searchForTransaction(addresses, lastBlockCount=None):
 			for y in x['transactions']:
 				postTransaction(y['amount'], y['extra'])
 
+
 # Start TurtleCoind and wait for it to sync
 startdaemon()
 sleep(1)
@@ -197,7 +204,7 @@ nodeHeight = response['result']['knownBlockCount']
 walletHeight = response['result']['blockCount']
 
 while response['result']['knownBlockCount'] is 1:
-	print('Please wait, TurtleCoin is launching')
+	print('Turtlecoin is starting, please wait')
 	response = walletd.get_status()
 	sleep(5)
 
@@ -206,7 +213,7 @@ while ((abs(nodeHeight - walletHeight) > 10) or nodeHeight < 10 or walletHeight 
 	response = walletd.get_status()
 	nodeHeight = response['result']['knownBlockCount']
 	walletHeight = response['result']['blockCount']
-	print('\nStill syncing, you are {} block(s) behind.'.format(nodeHeight - walletHeight))
+	print('Still syncing, you are {} block(s) behind.'.format(nodeHeight - walletHeight))
 	i += 1
 	if i==10:
 		savewallet()
