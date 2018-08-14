@@ -7,6 +7,7 @@ TwitchTurtle
 * Download the new release from https://github.com/Watt3r/TwitchTurtle/releases/ 
 * Change the settings in settings/setttings.py with any text editor
 * Run main.exe
+* While you are streaming, you need to keep main.exe open
 
 
 #### Building from Source
