@@ -30,7 +30,7 @@ class TurtleCoind:
 
     def _make_get_request(self, method):
         get_url = self.url + '/' + method
-        print(get_url)
+        #print(get_url)
         response = requests.get(get_url)
         return response.json()
 

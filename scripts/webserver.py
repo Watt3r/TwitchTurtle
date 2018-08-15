@@ -22,7 +22,6 @@ This file is part of TwitchTurtle.
 '''
 import tornado.ioloop
 import tornado.web
-from scripts.settings import Settings
 import requests
 from datetime import datetime
 import calendar
@@ -39,20 +38,13 @@ def getRefreshToken(code):
 		'redirect_uri': "http://localhost:11888",
 		'code': code
 	}
-	#print(Settings.Settings)
 	response = requests.request("POST", url, data=querystring)
-	#print('Access token: {}'.format(response.json().get('access_token')))
-	Settings.Settings['access_token'] = response.json().get('access_token')
-	#print('Refresh token: {}'.format(response.json().get('refresh_token')))
-	Settings.Settings['refresh_token'] = response.json().get('refresh_token')
 	d = datetime.utcnow()
 	unixtime = calendar.timegm(d.utctimetuple())
-	Settings.Settings['access_token_created_at'] = unixtime
-	#print(Settings.Settings)
 
 	stopTornado()
 	global streamKeys
-	streamKeys = [Settings.Settings['access_token'], Settings.Settings['refresh_token'], Settings.Settings['access_token_created_at']]
+	streamKeys = [response.json().get('access_token'), response.json().get('refresh_token'), unixtime]
 	return streamKeys
 
 class tokenHandler(tornado.web.RequestHandler):

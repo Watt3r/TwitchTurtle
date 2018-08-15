@@ -22,7 +22,6 @@ This file is part of TwitchTurtle.
 '''
 from scripts.walletd import Walletd
 from scripts.turtlecoind import TurtleCoind
-from settings.settings import Settings
 from scripts.streamlabs import Stream
 from time import sleep
 from scripts.webserver import *
@@ -36,27 +35,61 @@ import webbrowser
 import json
 import ast
 import binascii
-print("TwitchTurtle  Copyright (C) 2018  Watt Erikson and TurtleCoin Devs \n This program comes with ABSOLUTELY NO WARRANTY. \n This is free software, and you are welcome to redistribute it \n under certain conditions.")
+import string
+import random
+import configparser
+import optparse
+print("TwitchTurtle  Copyright (C) 2018  Watt Erikson and TurtleCoin Devs \n This program comes with ABSOLUTELY NO WARRANTY. \n This is free software, and you are welcome to redistribute it \n under certain conditions.\n\n")
 
 cwd = os.getcwd()
+
+
+config = configparser.ConfigParser()
+config.sections()
+config.read('settings.ini')
+config.sections()
+
+with open('settings.ini', 'w') as configfile:
+  config.write(configfile)
+
 # Set what type of currency you want (TRTL or USD)
-currencyPref = Settings.Settings['currencyPref']
+currencyPref = config['SETTINGS']['currencyPref']
+key = 'JPb4PBWcAmZtpRF9BTjSun7CPJ0G7MfP8QkzEwQz'
 print('Currency is set to {}'.format(currencyPref))
+
+# Set log level
+parser = optparse.OptionParser()
+
+parser.add_option('-l', '--log-level',
+    action="store", dest="log",
+    help="log-level", default="1")
+
+options, args = parser.parse_args()
+
+print ('Log level: {}'.format(options.log))
+
 
 
 '''
 START STREAMLABS CODE
 '''
 Stream.checkLocalTokenAndCreate()
-keys = Stream.checkToken()
+keys = Stream.checkToken(key)
 
 '''
 START WALLETD
 '''
-walletname = Settings.Settings['walletname']
-walletpassword = Settings.Settings['walletpassword']
+walletname = config['SETTINGS']['walletname']
+walletpassword = config['SETTINGS']['walletpassword']
 
-rpc_password = Settings.Settings['rpcpassword']
+if walletpassword == 'defaultpass':
+	input('Change your wallet passsword in settings.ini, or you can choose to ignore this security risk and press [ENTER] to continue')
+
+def passGen(size=10, chars=string.ascii_uppercase + string.digits):
+	return ''.join(random.choice(chars) for _ in range(size))
+
+
+rpc_password = passGen()
 feeAmount = '100'
 
 
@@ -73,7 +106,7 @@ def startWalletd():
 	print("Starting Walletd")
 	
 	try:
-		walletdArgs = cwd+"\\scripts\\turtle-service.exe -w scripts\\"+walletname+" -p "+walletpassword+" --rpc-password "+rpc_password+" --enable-cors  '*'"
+		walletdArgs = cwd+"\\scripts\\turtle-service.exe -w scripts\\"+walletname+" -p "+walletpassword+" --rpc-password "+rpc_password+" --enable-cors  '*' --log-level "+ options.log +" --daemon-address 127.0.0.1"
 
 		proc1 = subprocess.Popen(walletdArgs, stderr=subprocess.STDOUT)
 		sleep(5)
@@ -92,12 +125,22 @@ def startdaemon():
 	print("Starting TurtleCoind")
 	
 	try:
-		turtlecoindArgs = cwd+"\\scripts\\turtlecoind.exe --load-checkpoints checkpoints.csv --fee-address TRTLuxXuMJYPAWwbqUpBPkjWA79hLdb6G5CF4fjqhdgP8ufhbLcFWNRPJiwtdZ5QcDgukvXT8yVxXSoXrehdwnRTZwDLQCMVoNf --fee-amount "+feeAmount 
+		turtlecoindArgs = cwd+"\\scripts\\turtlecoind.exe --load-checkpoints checkpoints.csv --log-level "+ options.log +" --fee-address TRTLuxXuMJYPAWwbqUpBPkjWA79hLdb6G5CF4fjqhdgP8ufhbLcFWNRPJiwtdZ5QcDgukvXT8yVxXSoXrehdwnRTZwDLQCMVoNf --fee-amount "+feeAmount 
 		
 		proc2 = subprocess.Popen(turtlecoindArgs, stderr=subprocess.STDOUT)
-		sleep(20)
-		startWalletd()
-		#checksync()
+		sleep(10)
+		while True:
+			print('Still syncing. {} More blocks'.format(turtlecoind.get_height()['network_height'] - turtlecoind.get_height()['height']))
+			if (turtlecoind.get_info()['synced']):
+				if os.path.isfile(cwd+"\\scripts\\"+walletname):
+					# Start walletd
+					startWalletd()
+					break
+				else:
+					# Create wallet
+					createAddresses()
+					break
+			sleep(20)
 
 	except Exception as err:
 		print('An error occured, check your task manager to make sure turtlecoind is not running. Error: {}'.format(err))
@@ -110,6 +153,7 @@ def createAddresses():
 	walletdArgs = cwd+"\\scripts\\turtle-service.exe -g -w scripts\\"+walletname+" -p "+walletpassword+" --rpc-password "+rpc_password 
 	process = subprocess.Popen(walletdArgs, stdout=subprocess.PIPE)
 	process.wait()
+	startWalletd()
 
 
 def savewallet():
@@ -134,9 +178,9 @@ def endwallet():
 def postTransaction(amount, extra):
 	# Convert The extra data and send it to streamlabs.py
 	amount = amount / 100
-	coinmarketcap = "https://api.coinmarketcap.com/v2/ticker/2958/?convert={}".format(Settings.Settings['currencyPref']) 
+	coinmarketcap = "https://api.coinmarketcap.com/v2/ticker/2958/?convert={}".format(currencyPref) 
 	r = requests.request("GET", coinmarketcap)
-	convertTRTL = r.json().get('data').get('quotes').get(Settings.Settings['currencyPref']).get('price')
+	convertTRTL = r.json().get('data').get('quotes').get(currencyPref).get('price')
 	amount = amount * convertTRTL
 	try:
 		extraASCII = binascii.unhexlify(extra.encode()).decode()
@@ -151,10 +195,10 @@ def postTransaction(amount, extra):
 
 		print("{} has sent the message {}.".format(name, message))
 			
-		Stream.postDonation(name, message, amount, Settings.Settings['currencyPref'], keys[1])
+		Stream.postDonation(name, message, amount, currencyPref, keys[1])
 	except Exception as err: 
 		print(err)
-		Stream.postDonation('Anonymous', 'Some TRTL\'er forgot to put a name and message! Oh no! If this was you, make sure to add the extra data field from the converter.', amount, Settings.Settings['currencyPref'], keys[1])
+		Stream.postDonation('Anonymous', 'Some TRTL\'er forgot to put a name and message! Oh no! If this was you, make sure to add the extra data field from the converter.', amount, currencyPref, keys[1])
 def searchForTransaction(addresses, lastBlockCount=None):
 	# Get new block height
 	responseStatus = walletd.get_status()
@@ -174,34 +218,40 @@ def searchForTransaction(addresses, lastBlockCount=None):
 			for y in x['transactions']:
 				postTransaction(y['amount'], y['extra'])
 
+
 # Start TurtleCoind and wait for it to sync
 startdaemon()
+sleep(20)
+
 
 # Check if wallet is synced with the network
 response = walletd.get_status()
 nodeHeight = response['result']['knownBlockCount']
 walletHeight = response['result']['blockCount']
 
-print('TRTL network is on block {}'.format(nodeHeight))
+while response['result']['knownBlockCount'] is 1:
+	print('Turtlecoin is starting, please wait')
+	response = walletd.get_status()
+	sleep(5)
+# Set Address
+
+response = walletd.get_addresses()
+addresses = response['result']['addresses']
+print('\n\n\nIn order to recieve tips, users must send TRTL to this address: {} \n It is highly recommended to transfer all the funds out of this wallet into a more secure one. You can transact the TRTL out from the box-turtle folder.\n\n\n'.format(addresses[0]))
+
+
 i = 0
-while (abs(nodeHeight - walletHeight) > 10):
+while ((abs(nodeHeight - walletHeight) > 10) or nodeHeight < 10 or walletHeight < 10):
 	response = walletd.get_status()
 	nodeHeight = response['result']['knownBlockCount']
 	walletHeight = response['result']['blockCount']
-	print('Please wait while the wallet is syncing, you are {} block(s) behind. Slow and Steady wins the race!'.format(nodeHeight - walletHeight))
+	print('Still syncing, you are {} block(s) behind.'.format(nodeHeight - walletHeight))
 	i += 1
 	if i==10:
 		savewallet()
 		i = 0
 	sleep(10)
-if (nodeHeight - walletHeight) < 10: 
-	print("You are now syncronised with the TRTL network. Enjoy!")
-	savewallet() 
 
-# Set Address
-
-response = walletd.get_addresses()
-addresses = response['result']['addresses']
-print('In order to recieve tips, users must send TRTL to this address: {} \n It is highly recommended to transfer all the funds out of this wallet into a more secure one. You can transact the TRTL out from the box-turtle folder.'.format(addresses[0]))
-
+savewallet()	
+print('\n\n\nIn order to recieve tips, users must send TRTL to this address: {} \n It is highly recommended to transfer all the funds out of this wallet into a more secure one. You can transact the TRTL out from the box-turtle folder.\n\n\n'.format(addresses[0]))
 searchForTransaction(addresses)

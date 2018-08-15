@@ -21,7 +21,6 @@ This file is part of TwitchTurtle.
 
 '''
 from scripts.walletd import Walletd
-from scripts.settings import Settings
 from time import sleep
 from scripts.webserver import *
 import subprocess
@@ -80,7 +79,7 @@ class Stream:
 		return refresh_token, access_token
 
 	# Make sure access_token does not expire 
-	def checkToken():
+	def checkToken(key):
 		global refresh_token
 		global access_token
 
@@ -91,7 +90,7 @@ class Stream:
 		querystring = {
 			'grant_type': "refresh_token",
 			'client_id': 'bNN1u60BNNqbOgiId4eNuYKNQ3ykZ3meJoocLqvs',
-			'client_secret': 'JPb4PBWcAmZtpRF9BTjSun7CPJ0G7MfP8QkzEwQz',
+			'client_secret': key,
 			'redirect_uri': "http://localhost:11888",
 			'refresh_token': refresh_token
 		}
@@ -117,7 +116,7 @@ class Stream:
 			f.write(refresh_token)
 			f.close()
 
-		threading.Timer(3000.0, Stream.checkToken,).start() # START ASYNC PROCESS
+		threading.Timer(3000.0, Stream.checkToken, args=(key,)).start() # START ASYNC PROCESS
 		return refresh_token, access_token
 
 	def postDonation(name, message, amount, currency, access_token):
