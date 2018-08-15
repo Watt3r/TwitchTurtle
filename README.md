@@ -25,7 +25,7 @@ Alternatively, if you already use TurtleCoin, you can donate to my address here:
 
 #### How to get TRTL into USD
 
-* To get TRTL into USD, open `main.exe` and open the `index.html` file inside box-turtle folder. Then use any exchange listed [here](turtleturtle.org)
+* To get TRTL into USD, open `main.exe` and open the `index.html` file inside box-turtle folder. Then use any exchange listed [here](http://turtleturtle.org)
 * Send your TRTL with the paymentID (IMPORTANT!) and they will be in the exchange account if you want to transfer them to other coins, or into USD
 
 ### Help!
