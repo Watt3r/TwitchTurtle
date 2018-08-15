@@ -40,6 +40,7 @@ If you need help, with any aspect of this project, make sure to [Join the Offici
 * Open terminal or cmd and go to the TwitchTurtle folder and enter `pip install -r requirements.txt`
 * Open the `settings.ini` with your favorite editor, and change the password and username.
 * Then, run `python main.py` while in the TwitchTurtle folder.
+* (Optional) if you want to make the python file into an .exe, run the build.bat file and it will build it into the `dist` folder.
 
 
 ### TL;DR
