@@ -1,9 +1,16 @@
+altgraph==0.16.1
 certifi==2018.4.16
 chardet==3.0.4
+future==0.16.0
 idna==2.7
 itsdangerous==0.24
 Jinja2==2.10
+macholib==1.10
 MarkupSafe==1.0
+pefile==2018.8.8
+PyInstaller==3.3.1
+pypiwin32==223
+pywin32==223
 requests==2.19.1
 tornado==5.1
 urllib3==1.23
