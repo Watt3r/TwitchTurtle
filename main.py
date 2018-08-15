@@ -38,6 +38,7 @@ import binascii
 import string
 import random
 import configparser
+import optparse
 print("TwitchTurtle  Copyright (C) 2018  Watt Erikson and TurtleCoin Devs \n This program comes with ABSOLUTELY NO WARRANTY. \n This is free software, and you are welcome to redistribute it \n under certain conditions.\n\n")
 
 cwd = os.getcwd()
@@ -53,14 +54,27 @@ with open('settings.ini', 'w') as configfile:
 
 # Set what type of currency you want (TRTL or USD)
 currencyPref = config['SETTINGS']['currencyPref']
+key = 'JPb4PBWcAmZtpRF9BTjSun7CPJ0G7MfP8QkzEwQz'
 print('Currency is set to {}'.format(currencyPref))
+
+# Set log level
+parser = optparse.OptionParser()
+
+parser.add_option('-l', '--log-level',
+    action="store", dest="log",
+    help="log-level", default="1")
+
+options, args = parser.parse_args()
+
+print ('Log level: {}'.format(options.log))
+
 
 
 '''
 START STREAMLABS CODE
 '''
 Stream.checkLocalTokenAndCreate()
-keys = Stream.checkToken()
+keys = Stream.checkToken(key)
 
 '''
 START WALLETD
@@ -92,7 +106,7 @@ def startWalletd():
 	print("Starting Walletd")
 	
 	try:
-		walletdArgs = cwd+"\\scripts\\turtle-service.exe -w scripts\\"+walletname+" -p "+walletpassword+" --rpc-password "+rpc_password+" --enable-cors  '*' --daemon-address 127.0.0.1"
+		walletdArgs = cwd+"\\scripts\\turtle-service.exe -w scripts\\"+walletname+" -p "+walletpassword+" --rpc-password "+rpc_password+" --enable-cors  '*' --log-level "+ options.log +" --daemon-address 127.0.0.1"
 
 		proc1 = subprocess.Popen(walletdArgs, stderr=subprocess.STDOUT)
 		sleep(5)
@@ -111,17 +125,22 @@ def startdaemon():
 	print("Starting TurtleCoind")
 	
 	try:
-		turtlecoindArgs = cwd+"\\scripts\\turtlecoind.exe --load-checkpoints checkpoints.csv --log-level 2 --fee-address TRTLuxXuMJYPAWwbqUpBPkjWA79hLdb6G5CF4fjqhdgP8ufhbLcFWNRPJiwtdZ5QcDgukvXT8yVxXSoXrehdwnRTZwDLQCMVoNf --fee-amount "+feeAmount 
+		turtlecoindArgs = cwd+"\\scripts\\turtlecoind.exe --load-checkpoints checkpoints.csv --log-level "+ options.log +" --fee-address TRTLuxXuMJYPAWwbqUpBPkjWA79hLdb6G5CF4fjqhdgP8ufhbLcFWNRPJiwtdZ5QcDgukvXT8yVxXSoXrehdwnRTZwDLQCMVoNf --fee-amount "+feeAmount 
 		
 		proc2 = subprocess.Popen(turtlecoindArgs, stderr=subprocess.STDOUT)
 		sleep(10)
-		if os.path.isfile(cwd+"\\scripts\\"+walletname):
-			# Start walletd
-			startWalletd()
-		else:
-			# Create wallet
-			createAddresses()
-		#checksync()
+		while True:
+			print('Still syncing. {} More blocks'.format(turtlecoind.get_height()['network_height'] - turtlecoind.get_height()['height']))
+			if (turtlecoind.get_info()['synced']):
+				if os.path.isfile(cwd+"\\scripts\\"+walletname):
+					# Start walletd
+					startWalletd()
+					break
+				else:
+					# Create wallet
+					createAddresses()
+					break
+			sleep(20)
 
 	except Exception as err:
 		print('An error occured, check your task manager to make sure turtlecoind is not running. Error: {}'.format(err))
