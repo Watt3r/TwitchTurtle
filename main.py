@@ -39,6 +39,7 @@ import string
 import random
 import configparser
 import optparse
+import sys
 print("TwitchTurtle  Copyright (C) 2018  Watt Erikson and TurtleCoin Devs \n This program comes with ABSOLUTELY NO WARRANTY. \n This is free software, and you are welcome to redistribute it \n under certain conditions.\n\n")
 
 cwd = os.getcwd()
@@ -112,7 +113,7 @@ def startWalletd():
 		sleep(5)
 	except Exception as err:
 		print('An error occured, check your task manager to make sure walletd is not running. Error: {}'.format(err))
-		exit()
+		sys.exit()
 
 def startdaemon():
 	global proc2
