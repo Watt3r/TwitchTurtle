@@ -55,7 +55,7 @@ class tokenHandler(tornado.web.RequestHandler):
 		else:
 			self.write("StreamLabs TurtleCoin integration. If you are seeing this message,have successfully authenticated your StreamLabs account with TRTL. You can close this page safely")
 		
-		print(getRefreshToken(code))
+		getRefreshToken(code)
 
 	def post(self):
 		token = self.get_argument("token")

@@ -23,6 +23,8 @@ TurtleCoin is a cryptocurrency that is fast, private, and easy to use!
 If you would like to Donate using TurtleCoin, go to github.com/turtlecoin/box-turtle
 Alternatively, if you already use TurtleCoin, you can donate to my address here: <YOUR TRTL ADDRESS>
 
+You can also advertise to the TwitchTurtle discord when you go live! [Invite Code](http://chat.twitchturtle.com)
+
 #### How to get TRTL into USD
 
 * To get TRTL into USD, open `main.exe` and open the `index.html` file inside box-turtle folder. Then use any exchange listed [here](http://turtleturtle.org)
@@ -31,6 +33,7 @@ Alternatively, if you already use TurtleCoin, you can donate to my address here:
 ### Help!
 
 If you need help, with any aspect of this project, make sure to [Join the Official TurtleCoin Discord Server!](http://chat.turtlecoin.lol)
+You can also join the TwitchTurtle discord for more specific help questions [Invite Code](http://chat.twitchturtle.com)
 
 #### Building from Source
 
@@ -40,6 +43,7 @@ If you need help, with any aspect of this project, make sure to [Join the Offici
 * Open terminal or cmd and go to the TwitchTurtle folder and enter `pip install -r requirements.txt`
 * Open the `settings.ini` with your favorite editor, and change the password and username.
 * Then, run `python main.py` while in the TwitchTurtle folder.
+* (Optional) if you want to make the python file into an .exe, run the build.bat file and it will build it into the `dist` folder.
 
 
 ### TL;DR
