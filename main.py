@@ -129,7 +129,7 @@ def startdaemon():
 		turtlecoindArgs = cwd+"\\scripts\\turtlecoind.exe --load-checkpoints checkpoints.csv --log-level "+ options.log +" --fee-address TRTLuxXuMJYPAWwbqUpBPkjWA79hLdb6G5CF4fjqhdgP8ufhbLcFWNRPJiwtdZ5QcDgukvXT8yVxXSoXrehdwnRTZwDLQCMVoNf --fee-amount "+feeAmount 
 		
 		proc2 = subprocess.Popen(turtlecoindArgs, stderr=subprocess.STDOUT)
-		sleep(10)
+		sleep(20)
 		while True:
 			print('Still syncing. {} More blocks'.format(turtlecoind.get_height()['network_height'] - turtlecoind.get_height()['height']))
 			if (turtlecoind.get_info()['synced']):
@@ -145,7 +145,7 @@ def startdaemon():
 
 	except Exception as err:
 		print('An error occured, check your task manager to make sure turtlecoind is not running. Error: {}'.format(err))
-		exit()
+		sys.exit()
 		
 def createAddresses():
 	# Generate a new wallet file
