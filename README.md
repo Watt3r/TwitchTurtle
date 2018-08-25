@@ -2,6 +2,9 @@ TwitchTurtle
 ======
 ## Integrate TurtleCoin with StreamLabs
 Note: This is works with Twitch and Youtube Live
+
+# This project is being depreciated and replaced with a web only version. This program will still work but is no longer updated and has no support.
+
 ### Basic installation
 
 * Download the new release from https://github.com/Watt3r/TwitchTurtle/releases/ 
