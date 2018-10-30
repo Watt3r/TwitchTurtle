@@ -3,7 +3,7 @@ TwitchTurtle
 ## Integrate TurtleCoin with StreamLabs
 Note: This is works with Twitch and Youtube Live
 
-# This project is being depreciated and replaced with a web only version. This program will still work but is no longer updated and has no support.
+# This project is deprecated and replaced with a web only version at https://twitchturtle.com . This program no longer works and should only be used as an example
 
 ### Basic installation
 
@@ -12,31 +12,7 @@ Note: This is works with Twitch and Youtube Live
 * Run main.exe
 * While you are streaming, you need to keep main.exe open
 
-#### How to use
 
-* After the first time running, you should just need to run `python main.py` while in the TwitchTurtle folder.
-* If you want to take the TurtleCoin out of your donation wallet and into a new one, (which is highly recomended) download [box-turtle from here](https://github.com/watt3r/box-turtle)
-
-### How to get your viewers to donate with TRTL.
-
-To inform your viewers about TurtleCoin and your new way of donating, you can copy and paste this Text into a Nightbot repeating command, or into your description.
-
-
-TurtleCoin is a cryptocurrency that is fast, private, and easy to use!
-If you would like to Donate using TurtleCoin, go to github.com/turtlecoin/box-turtle
-Alternatively, if you already use TurtleCoin, you can donate to my address here: <YOUR TRTL ADDRESS>
-
-You can also advertise to the TwitchTurtle discord when you go live! [Invite Code](http://chat.twitchturtle.com)
-
-#### How to get TRTL into USD
-
-* To get TRTL into USD, open `main.exe` and open the `index.html` file inside box-turtle folder. Then use any exchange listed [here](http://turtleturtle.org)
-* Send your TRTL with the paymentID (IMPORTANT!) and they will be in the exchange account if you want to transfer them to other coins, or into USD
-
-### Help!
-
-If you need help, with any aspect of this project, make sure to [Join the Official TurtleCoin Discord Server!](http://chat.turtlecoin.lol)
-You can also join the TwitchTurtle discord for more specific help questions [Invite Code](http://chat.twitchturtle.com)
 
 #### Building from Source
 
